@@ -26,14 +26,19 @@ import (
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	tailingsidecarv1 "github.com/SumoLogic/tailing-sidecar/operator/api/v1"
 	"github.com/SumoLogic/tailing-sidecar/operator/controllers"
 	"github.com/SumoLogic/tailing-sidecar/operator/handler"
 	// +kubebuilder:scaffold:imports
 )
+
+const WebhookPort = 9443
 
 var (
 	scheme   = runtime.NewScheme()
@@ -49,6 +54,7 @@ func init() {
 
 func main() {
 	var metricsAddr string
+	var healthAddr string
 	var enableLeaderElection bool
 	var tailingSidecarImage string
 	var configPath string
@@ -56,6 +62,7 @@ func main() {
 	var err error
 
 	flag.StringVar(&metricsAddr, "metrics-addr", ":8080", "The address the metric endpoint binds to.")
+	flag.StringVar(&healthAddr, "health-addr", ":8081", "The address the health check endpoint binds to.")
 	flag.BoolVar(&enableLeaderElection, "enable-leader-election", false,
 		"Enable leader election for controller manager. "+
 			"Enabling this will ensure there is only one active controller manager.")
@@ -84,14 +91,16 @@ func main() {
 	}
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
-		Scheme:             scheme,
-		MetricsBindAddress: metricsAddr,
-		Port:               9443,
-		LeaderElection:     enableLeaderElection,
-		LeaderElectionID:   "7b555970.sumologic.com",
-		LeaseDuration:      (*time.Duration)(&config.LeaderElection.LeaseDuration),
-		RenewDeadline:      (*time.Duration)(&config.LeaderElection.RenewDeadline),
-		RetryPeriod:        (*time.Duration)(&config.LeaderElection.RetryPeriod),
+		Scheme: scheme,
+		Metrics: metricsserver.Options{
+			BindAddress: metricsAddr,
+		},
+		HealthProbeBindAddress: healthAddr,
+		LeaderElection:         enableLeaderElection,
+		LeaderElectionID:       "7b555970.sumologic.com",
+		LeaseDuration:          (*time.Duration)(&config.LeaderElection.LeaseDuration),
+		RenewDeadline:          (*time.Duration)(&config.LeaderElection.RenewDeadline),
+		RetryPeriod:            (*time.Duration)(&config.LeaderElection.RetryPeriod),
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
@@ -107,10 +116,14 @@ func main() {
 		os.Exit(1)
 	}
 	// +kubebuilder:scaffold:builder
-
-	mgr.GetWebhookServer().Register("/add-tailing-sidecars-v1-pod", &webhook.Admission{
+	decoder := admission.NewDecoder(mgr.GetScheme())
+	webhookServer := webhook.NewServer(webhook.Options{
+		Port: WebhookPort,
+	})
+	webhookServer.Register("/add-tailing-sidecars-v1-pod", &webhook.Admission{
 		Handler: &handler.PodExtender{
 			Client:                  mgr.GetClient(),
+			Decoder:                 decoder,
 			TailingSidecarImage:     config.Sidecar.Image,
 			TailingSidecarResources: config.Sidecar.Resources,
 			ConfigMapName:           config.Sidecar.Config.Name,
@@ -118,6 +131,17 @@ func main() {
 			ConfigMapNamespace:      config.Sidecar.Config.Namespace,
 		},
 	})
+	mgr.Add(webhookServer)
+
+	if err = mgr.AddReadyzCheck("readyz", webhookServer.StartedChecker()); err != nil {
+		setupLog.Error(err, "unable to set up readiness check")
+		os.Exit(1)
+	}
+
+	if err = mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
+		setupLog.Error(err, "unable to set up health check")
+		os.Exit(1)
+	}
 
 	setupLog.Info("starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {

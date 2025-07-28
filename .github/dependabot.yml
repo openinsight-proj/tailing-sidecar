@@ -20,16 +20,21 @@ updates:
       interval: "daily"
       time: "06:27"
       timezone: "Europe/Warsaw"
+    groups:
+      kubernetes:
+        patterns:
+          - "k8s.io/*"
+          - "sigs.k8s.io/*"
 
   - package-ecosystem: "docker"
-    directory: "/sidecar"
+    directory: "/sidecar/fluentbit"
     schedule:
       interval: "daily"
       time: "06:27"
       timezone: "Europe/Warsaw"
 
   - package-ecosystem: "gomod"
-    directory: "/sidecar/out_gstdout"
+    directory: "/sidecar/fluentbit/out_gstdout"
     schedule:
       interval: "daily"
       time: "06:27"

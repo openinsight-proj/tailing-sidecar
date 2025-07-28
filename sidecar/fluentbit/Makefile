@@ -8,11 +8,20 @@ mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 root_dir := $(dir $(abspath $(mkfile_path)/..))
 
 TAG ?= "localhost:32000/sumologic/tailing-sidecar:latest"
+DOCKERFILE ?= Dockerfile
+RELEASE_NUMBER ?= 1
+VERSION ?= ""
 
 all: build push
 
 build:
-	docker build --tag $(TAG) --file ${root_dir}sidecar/Dockerfile ${root_dir}sidecar/
+	docker build \
+	--build-arg RELEASE_NUMBER=$(RELEASE_NUMBER) \
+	--build-arg VERSION=$(VERSION) \
+	--tag $(TAG) \
+	--file ${DOCKERFILE} .
+
+build-test-image: build
 
 run: build
 	docker run --rm -it \
@@ -28,15 +37,19 @@ build-push-multiplatform:
 		--tag ${TAG} \
 		.
 
+build-push-ubi:
+	$(MAKE) build DOCKERFILE=${DOCKERFILE}.ubi TAG=${TAG}-ubi
+	$(MAKE) push DOCKERFILE=${DOCKERFILE}.ubi TAG=${TAG}-ubi
+
 push:
 	docker push $(TAG)
 
 deploy-examples:
-	kubectl apply -f ${root_dir}sidecar/examples/pod_with_tailing_sidecars.yaml
+	kubectl apply -f examples/pod_with_tailing_sidecars.yaml
 	kubectl wait --for=condition=ready --timeout 60s pod example-with-tailling-sidecars
 
 test-examples:
-	${root_dir}sidecar/tests/test.sh
+	tests/test.sh
 
 teardown-examples:
 	kubectl delete pod example-with-tailling-sidecars

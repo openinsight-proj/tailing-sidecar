@@ -5,6 +5,105 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.18.0] - 2025-07-18
+
+- chore: update Go to 1.24.5 for fluentbit images [#807]
+- chore: update Go to 1.24.5 for operator images [#808]
+
+[#807]: https://github.com/SumoLogic/tailing-sidecar/pull/807
+[#808]: https://github.com/SumoLogic/tailing-sidecar/pull/808
+
+## [v0.17.0] - 2025-05-07
+
+- chore: update base ubi image from 9.4 to 9.5 and golang version from 1.22.5 to 1.24.3 [#802](https://github.com/SumoLogic/tailing-sidecar/pull/802)
+
+## [v0.16.0] - 2024-10-10
+
+- build(deps): bump docker/setup-buildx-action from 3.4.0 to 3.7.1 [#745]
+- build(deps): bump github.com/onsi/gomega in /operator [#757]
+- build(deps): bump fluent/fluent-bit in /sidecar/fluentbit [#763]
+- build(deps): bump golang from 1.22.4 to 1.23.2 in /operator [#764]
+
+[#745]: https://github.com/SumoLogic/tailing-sidecar/pull/745
+[#757]: https://github.com/SumoLogic/tailing-sidecar/pull/757
+[#763]: https://github.com/SumoLogic/tailing-sidecar/pull/763
+[#764]: https://github.com/SumoLogic/tailing-sidecar/pull/764
+
+## [v0.15.0] - 2024-06-27
+
+- chore(sidecar): update Fluent Bit UBI image to 3.0.7 by @sumo-drosiek in #725
+
+[#725]: https://github.com/SumoLogic/tailing-sidecar/pull/725
+
+## [v0.14.1] - 2024-06-21
+
+- deps: upgrade kube-rbac-proxy to v0.18.0 [#723]
+
+[#723]: https://github.com/SumoLogic/tailing-sidecar/pull/723
+
+## [v0.14.0] - 2024-06-04
+
+- build(deps): bump ubi8/ubi-minimal from 8.9 to 8.10 [#706]
+- build(deps): bump fluent/fluent-bit from 3.0.4 to 3.0.6 [#708]
+- chore: set version and release_number labels in ubi image [#711]
+- build: downgrade sidecar to Go 1.20 [#710]
+- deps: upgrade controller-runtime to 0.18.3 [#715]
+- feat(helm): set tolerations for the operator [#716]
+
+[#706]: https://github.com/SumoLogic/tailing-sidecar/pull/706
+[#708]: https://github.com/SumoLogic/tailing-sidecar/pull/708
+[#710]: https://github.com/SumoLogic/tailing-sidecar/pull/710
+[#711]: https://github.com/SumoLogic/tailing-sidecar/pull/711
+[#715]: https://github.com/SumoLogic/tailing-sidecar/pull/715
+[#716]: https://github.com/SumoLogic/tailing-sidecar/pull/716
+
+## [v0.13.0] - 2024-05-21
+
+- build(deps): bump fluent/fluent-bit from 3.0.2 to 3.0.4 in /sidecar/fluentbit. [#703]
+- build(deps): bump golang from 1.22.2 to 1.22.3 in /operator [#699]
+
+[#703]: https://github.com/SumoLogic/tailing-sidecar/pull/703
+[#699]: https://github.com/SumoLogic/tailing-sidecar/pull/699
+[v0.13.0]: https://github.com/SumoLogic/tailing-sidecar/releases/v0.13.0
+
+## [v0.12.0] - 2024-04-19
+
+- build(deps): update fluent/fluent-bit in /sidecar/fluentbit from from 3.0.1 to 3.0.2. [#680]
+- feat: push container images to Docker Hub [#687]
+
+[#680]: https://github.com/SumoLogic/tailing-sidecar/pull/680
+[#687]: https://github.com/SumoLogic/tailing-sidecar/pull/687
+[v0.12.0]: https://github.com/SumoLogic/tailing-sidecar/releases/v0.12.0
+
+## [v0.11.0] - 2024-03-25
+
+- feat: build ubi images [#654]
+- add affinity config for operator pod [#670]
+- build(deps): bump Fluent Bit from 2.2.2 to 3.0.0 [#672]
+
+[#654]: https://github.com/SumoLogic/tailing-sidecar/pull/654
+[#670]: https://github.com/SumoLogic/tailing-sidecar/pull/670
+[#672]: https://github.com/SumoLogic/tailing-sidecar/pull/672
+[v0.11.0]: https://github.com/SumoLogic/tailing-sidecar/releases/v0.11.0
+
+## [v0.10.0] - 2024-02-14
+
+- feat(operator): add proper health checks [#608]
+- build(deps): bump Fluent Bit from 2.1.7 to 2.2.2 [#569] [#581] [#589] [#622] [#636] [#639]
+- deps(operator): upgrade controller-runtime to 0.17.1 [#603] [#644] [#648]
+
+[#569]: https://github.com/SumoLogic/tailing-sidecar/pull/569
+[#581]: https://github.com/SumoLogic/tailing-sidecar/pull/581
+[#589]: https://github.com/SumoLogic/tailing-sidecar/pull/589
+[#603]: https://github.com/SumoLogic/tailing-sidecar/pull/603
+[#608]: https://github.com/SumoLogic/tailing-sidecar/pull/608
+[#622]: https://github.com/SumoLogic/tailing-sidecar/pull/622
+[#636]: https://github.com/SumoLogic/tailing-sidecar/pull/636
+[#639]: https://github.com/SumoLogic/tailing-sidecar/pull/639
+[#644]: https://github.com/SumoLogic/tailing-sidecar/pull/644
+[#648]: https://github.com/SumoLogic/tailing-sidecar/pull/648
+[v0.10.0]: https://github.com/SumoLogic/tailing-sidecar/releases/v0.10.0
+
 ## [v0.9.0] - 2023-07-20
 
 - chore(sidecar): update fluent-bit to 2.1.7 [#563]

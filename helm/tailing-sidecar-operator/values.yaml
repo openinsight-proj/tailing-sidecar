@@ -32,6 +32,10 @@ operator:
   startupProbe: {}
     # periodSeconds: 3
 
+  affinity: {}
+
+  tolerations: []
+
 sidecar:
   image:
     repository: public.ecr.aws/sumologic/tailing-sidecar
@@ -63,7 +67,7 @@ kubeRbacProxy:
   image:
     pullPolicy: IfNotPresent
     repository: quay.io/brancz/kube-rbac-proxy
-    tag: v0.11.0
+    tag: v0.18.0
   resources:
     limits:
       cpu: 500m
@@ -78,7 +82,7 @@ kubeRbacProxy:
 webhook:
   failurePolicy: Ignore
   reinvocationPolicy: Never
-  
+
   objectSelector: {}
     # matchLabels:
     #   tailing-sidecar: "true"

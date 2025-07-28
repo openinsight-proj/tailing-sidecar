@@ -12,19 +12,19 @@ env:
 
 jobs:
   markdownlint:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-ruby@v1
+      - uses: ruby/setup-ruby@v1
         with:
-          ruby-version: '2.7'
+          ruby-version: '3.4.3'
       - name: install markdownlint
         run: gem install mdl
       - name: markdownlint check
         run: make markdownlint
 
   yamllint:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - name: install yamllint
@@ -34,13 +34,14 @@ jobs:
 
   build-operator:
     name: Build tailing sidecar operator
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - name: Setup go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
-          go-version: '1.20'
+          go-version: '1.24'
+          cache-dependency-path: operator/go.sum
       - name: Run tests for tailing sidecar operator
         working-directory: ./operator
         run: make test
@@ -50,72 +51,124 @@ jobs:
 
   test-without-helm:
     name: Test resources created without Helm chart
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
+    strategy:
+      matrix:
+        sidecar: [fluentbit]
     steps:
       - uses: actions/checkout@v4
       - name: Setup go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
-          go-version: '1.20'
+          go-version: '1.22'
+          cache-dependency-path: |
+            .otelcol-builder.yaml
+            .goreleaser.yaml
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3.1.0
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3.7.1
+      - name: Install opentelemetry-collector-builder
+        working-directory: ./sidecar/otelcol
+        run: make install-builder
       - uses: imranismail/setup-kustomize@v2
       - name: Install kuttl
         run: |
           curl -Lo /usr/local/bin/kubectl-kuttl https://github.com/kudobuilder/kuttl/releases/download/v${{ env.KUTTL_VERSION }}/kubectl-kuttl_${{ env.KUTTL_VERSION }}_linux_x86_64
           chmod +x /usr/local/bin/kubectl-kuttl
-      - name: Run e2e tests
-        run: make e2e
+      - name: Run e2e tests for ${{ matrix.sidecar }} in tailing sidecar
+        run: make e2e TAILING_SIDECAR=${{ matrix.sidecar }}
 
   test-helm-chart:
     name: Test Helm chart
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
+    strategy:
+      matrix:
+        sidecar: [fluentbit]
     steps:
       - uses: actions/checkout@v4
       - name: Setup go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
-          go-version: '1.20'
+          go-version: '1.22'
+          cache-dependency-path: |
+            .otelcol-builder.yaml
+            .goreleaser.yaml
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3.1.0
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3.7.1
+      - name: Install opentelemetry-collector-builder
+        working-directory: ./sidecar/otelcol
+        run: make install-builder
       - uses: imranismail/setup-kustomize@v2
       - name: Install kuttl
         run: |
           curl -Lo /usr/local/bin/kubectl-kuttl https://github.com/kudobuilder/kuttl/releases/download/v${{ env.KUTTL_VERSION }}/kubectl-kuttl_${{ env.KUTTL_VERSION }}_linux_x86_64
           chmod +x /usr/local/bin/kubectl-kuttl
-      - name: Run Helm e2e tests
-        run: make e2e-helm
+      - name: Run Helm e2e tests for ${{ matrix.sidecar }} in tailing sidecar
+        run: make e2e-helm TAILING_SIDECAR=${{ matrix.sidecar }}
 
   test-helm-chart-with-cert-manager:
     name: Test Helm chart with cert-manager
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
+    strategy:
+      matrix:
+        sidecar: [fluentbit]
     steps:
       - uses: actions/checkout@v4
       - name: Setup go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
-          go-version: '1.20'
+          go-version: '1.22'
+          cache-dependency-path: |
+            sidecar/otelcol/.otelcol-builder.yaml
+            sidecar/otelcol/.goreleaser.yaml
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3.1.0
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3.7.1
+      - name: Install opentelemetry-collector-builder
+        working-directory: ./sidecar/otelcol
+        run: make install-builder
       - uses: imranismail/setup-kustomize@v2
       - name: Install kuttl
         run: |
           curl -Lo /usr/local/bin/kubectl-kuttl https://github.com/kudobuilder/kuttl/releases/download/v${{ env.KUTTL_VERSION }}/kubectl-kuttl_${{ env.KUTTL_VERSION }}_linux_x86_64
           chmod +x /usr/local/bin/kubectl-kuttl
-      - name: Run e2e tests
-        run: make e2e-helm-certmanager
+      - name: Run Helm e2e tests for ${{ matrix.sidecar }} in tailing sidecar
+        run: make e2e-helm-certmanager TAILING_SIDECAR=${{ matrix.sidecar }}
 
   test-helm-chart-with-custom-configuration:
     name: Test Helm chart with custom configuration
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
+    strategy:
+      matrix:
+        sidecar: [fluentbit]
     steps:
       - uses: actions/checkout@v4
       - name: Setup go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
-          go-version: '1.20'
+          go-version: '1.22'
+          cache-dependency-path: |
+            sidecar/otelcol/.otelcol-builder.yaml
+            sidecar/otelcol/.goreleaser.yaml
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3.1.0
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3.7.1
+      - name: Install opentelemetry-collector-builder
+        working-directory: ./sidecar/otelcol
+        run: make install-builder
       - uses: imranismail/setup-kustomize@v2
       - name: Install kuttl
         run: |
           curl -Lo /usr/local/bin/kubectl-kuttl https://github.com/kudobuilder/kuttl/releases/download/v${{ env.KUTTL_VERSION }}/kubectl-kuttl_${{ env.KUTTL_VERSION }}_linux_x86_64
           chmod +x /usr/local/bin/kubectl-kuttl
-      - name: Run e2e tests
-        run: make e2e-helm-custom-configuration
+      - name: Run Helm e2e tests for ${{ matrix.sidecar }} in tailing sidecar
+        run: make e2e-helm-custom-configuration TAILING_SIDECAR=${{ matrix.sidecar }}
